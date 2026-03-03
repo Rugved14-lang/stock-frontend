@@ -32,12 +32,10 @@ function App() {
     setChartData(null);
 
     try {
-      // Fetch current price
-      const res = await axios.get(`https://stock-test-production.up.railway.app/stock/${symbol}`);
+      const res = await axios.get(`${RAILWAY_URL}/stock/${symbol}`);
       setStockData(res.data);
 
-      // Fetch historical data
-      const histRes = await axios.get(`https://stock-test-production.up.railway.app/stock/${symbol}/history`);
+      const histRes = await axios.get(`${RAILWAY_URL}/stock/${symbol}/history`);
       const history = histRes.data;
 
       setChartData({
@@ -77,13 +75,8 @@ function App() {
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: {
-        labels: { color: 'white' }
-      },
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-      }
+      legend: { labels: { color: 'white' } },
+      tooltip: { mode: 'index', intersect: false }
     },
     scales: {
       x: {
