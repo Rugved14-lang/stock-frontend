@@ -1,10 +1,26 @@
 import { useState } from 'react';
 import axios from 'axios';
 import './App.css';
+import {
+  Chart as ChartJS,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
+
+const RAILWAY_URL = 'https://stock-test-production.up.railway.app';
 
 function App() {
   const [symbol, setSymbol] = useState('');
   const [stockData, setStockData] = useState(null);
+  const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -13,10 +29,31 @@ function App() {
     setLoading(true);
     setError('');
     setStockData(null);
+    setChartData(null);
 
     try {
+      // Fetch current price
       const res = await axios.get(`https://stock-test-production.up.railway.app/stock/${symbol}`);
       setStockData(res.data);
+
+      // Fetch historical data
+      const histRes = await axios.get(`https://stock-test-production.up.railway.app/stock/${symbol}/history`);
+      const history = histRes.data;
+
+      setChartData({
+        labels: history.map(d => d.date),
+        datasets: [{
+          label: `${symbol} Price (USD)`,
+          data: history.map(d => d.close),
+          borderColor: '#00ff88',
+          backgroundColor: 'rgba(0, 255, 136, 0.1)',
+          borderWidth: 2,
+          pointRadius: 2,
+          fill: true,
+          tension: 0.4,
+        }]
+      });
+
     } catch (err) {
       setError('Stock not found. Try another symbol!');
     }
@@ -24,18 +61,41 @@ function App() {
   };
 
   const getLogoUrl = (symbol) => {
-  const logos = {
-    'AAPL': 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
-    'AMZN': 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg',
-    'TSLA': 'https://upload.wikimedia.org/wikipedia/commons/b/bd/Tesla_Motors.svg',
-    'GOOGL': 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg',
-    'MSFT': 'https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg',
-    'META': 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg',
-    'NFLX': 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
-    'NVDA': 'https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg',
+    const logos = {
+      'AAPL': 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
+      'AMZN': 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg',
+      'TSLA': 'https://upload.wikimedia.org/wikipedia/commons/b/bd/Tesla_Motors.svg',
+      'GOOGL': 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg',
+      'MSFT': 'https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg',
+      'META': 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg',
+      'NFLX': 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
+      'NVDA': 'https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg',
+    };
+    return logos[symbol] || null;
   };
-  return logos[symbol] || null;
-};
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        labels: { color: 'white' }
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: 'white', maxTicksLimit: 6 },
+        grid: { color: 'rgba(255,255,255,0.1)' }
+      },
+      y: {
+        ticks: { color: 'white' },
+        grid: { color: 'rgba(255,255,255,0.1)' }
+      }
+    }
+  };
 
   return (
     <div style={styles.container}>
@@ -60,13 +120,13 @@ function App() {
       {stockData && (
         <div style={styles.card}>
           {getLogoUrl(stockData.symbol) && (
-          <img 
-            src={getLogoUrl(stockData.symbol)}
-            alt={stockData.symbol}
-            style={styles.logo}
-            onError={(e) => e.target.style.display = 'none'}
-          />
-        )}
+            <img
+              src={getLogoUrl(stockData.symbol)}
+              alt={stockData.symbol}
+              style={styles.logo}
+              onError={(e) => e.target.style.display = 'none'}
+            />
+          )}
           <h2 style={styles.symbol}>{stockData.symbol}</h2>
           <p style={styles.price}>💰 Price: <strong>${stockData.price}</strong></p>
           <p style={styles.change}>
@@ -76,6 +136,12 @@ function App() {
               {stockData.change} ({stockData.changePercent})
             </strong>
           </p>
+        </div>
+      )}
+
+      {chartData && (
+        <div style={styles.chartContainer}>
+          <Line data={chartData} options={chartOptions} />
         </div>
       )}
     </div>
@@ -91,6 +157,7 @@ const styles = {
     alignItems: 'center',
     paddingTop: '80px',
     fontFamily: 'Arial, sans-serif',
+    paddingBottom: '80px',
   },
   title: {
     color: '#00ff88',
@@ -129,6 +196,7 @@ const styles = {
     padding: '40px',
     textAlign: 'center',
     width: '300px',
+    marginBottom: '40px',
   },
   symbol: {
     color: '#00ff88',
@@ -153,14 +221,21 @@ const styles = {
     fontSize: '1rem',
   },
   logo: {
-  width: '80px',
-  height: '80px',
-  borderRadius: '50%',
-  marginBottom: '15px',
-  objectFit: 'contain',
-  backgroundColor: 'white',
-  padding: '8px',
-},
+    width: '80px',
+    height: '80px',
+    borderRadius: '50%',
+    marginBottom: '15px',
+    objectFit: 'contain',
+    backgroundColor: 'white',
+    padding: '8px',
+  },
+  chartContainer: {
+    width: '800px',
+    backgroundColor: '#1a1a1a',
+    border: '2px solid #00ff88',
+    borderRadius: '16px',
+    padding: '30px',
+  },
 };
 
 export default App;
