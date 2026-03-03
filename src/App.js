@@ -15,7 +15,7 @@ function App() {
     setStockData(null);
 
     try {
-      const res = await axios.get(`http://localhost:5000/stock/${symbol}`);
+      const res = await axios.get(`https://stock-test-production.up.railway.app/stock/${symbol}`);
       setStockData(res.data);
     } catch (err) {
       setError('Stock not found. Try another symbol!');
