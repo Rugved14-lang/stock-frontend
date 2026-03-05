@@ -35,7 +35,6 @@ export default function App() {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [searched, setSearched] = useState(false);
 
   const fetchStock = useCallback(async () => {
     if (!symbol.trim()) return;
@@ -43,7 +42,6 @@ export default function App() {
     setError('');
     setStockData(null);
     setChartData(null);
-    setSearched(true);
 
     try {
       const [res, histRes] = await Promise.all([
