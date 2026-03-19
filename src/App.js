@@ -29,6 +29,11 @@ const getLogoUrl = (sym) => {
   return logos[sym] || null;
 };
 
+const formatChangePercent = (val) => {
+  if (typeof val === 'string') return val.trim();
+  return val.toFixed(4) + '%';
+};
+
 export default function App() {
   const [symbol, setSymbol] = useState('');
   const [stockData, setStockData] = useState(null);
@@ -289,8 +294,7 @@ export default function App() {
           </div>
           <div className="suggestions">
             {['AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN', 'META'].map(s => (
-              <button key={s} className="suggestion-chip"
-                onClick={() => fetchStockBySymbol(s)}>
+              <button key={s} className="suggestion-chip" onClick={() => fetchStockBySymbol(s)}>
                 {s}
               </button>
             ))}
@@ -323,7 +327,7 @@ export default function App() {
               <div className="stock-right">
                 <div className="stock-price">${parseFloat(stockData.price).toFixed(2)}</div>
                 <div className={`stock-change ${isPositive ? 'positive' : 'negative'}`}>
-                  {isPositive ? '▲' : '▼'} {Math.abs(parseFloat(stockData.change)).toFixed(2)} ({stockData.changePercent.trim()})
+                  {isPositive ? '▲' : '▼'} {Math.abs(parseFloat(stockData.change)).toFixed(2)} ({formatChangePercent(stockData.changePercent)})
                 </div>
               </div>
             </div>
@@ -352,7 +356,7 @@ export default function App() {
               <div className="stat-item">
                 <div className="stat-label">Change %</div>
                 <div className="stat-value" style={{ color: isPositive ? '#c8f04f' : '#ff5f5f' }}>
-                  {typeof stockData.changePercent === 'string' ? stockData.changePercent.trim() : stockData.changePercent + '%'}
+                  {formatChangePercent(stockData.changePercent)}
                 </div>
               </div>
             </div>
