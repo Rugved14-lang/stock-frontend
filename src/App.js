@@ -352,7 +352,7 @@ export default function App() {
               <div className="stat-item">
                 <div className="stat-label">Change %</div>
                 <div className="stat-value" style={{ color: isPositive ? '#c8f04f' : '#ff5f5f' }}>
-                  {stockData.changePercent.trim()}
+                  {typeof stockData.changePercent === 'string' ? stockData.changePercent.trim() : stockData.changePercent + '%'}
                 </div>
               </div>
             </div>
